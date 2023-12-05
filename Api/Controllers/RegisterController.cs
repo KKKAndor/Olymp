@@ -16,7 +16,7 @@ public class RegisterController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Register([FromForm] IFormFile file)
+    public async Task<IActionResult> Register(IFormFile file)
     {
         var users = await _fileReaderService.ReadUsers(file);
         var failedUsers = await _gitLabService.RegisterUsers(users);
