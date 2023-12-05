@@ -7,27 +7,26 @@ namespace Api;
 
 public class GitLabService
 {
-    public Task RegisterUsers()
+    public async Task RegisterUsers(User[] users)
     {
-        var emails = new[] {"email@mail.com"};
         var gitLabUrl = "https://git.olympics.dex-it.ru";
         var accessToken = "tokan";
         var groupId = 1;
 
         var gitLabClient = new GitLabClient(gitLabUrl, accessToken);
 
-        foreach (var email in emails)
+        foreach (var user in users)
         {
             try
             {
-                var existedUser = await gitLabClient.Users.GetAsync(email);
+                var existedUser = await gitLabClient.Users.GetAsync(user.Firstname + user.Surname);
 
                 if (existedUser == null)
                 {
                     continue;
                 }
 
-                var createUserRequest = new CreateUserRequest(email, email, email)
+                var createUserRequest = new CreateUserRequest(user.Firstname + user.Surname, user.Firstname + user.Surname, user.Email)
                 {
                     Password = "SomeRandomShit"
                 };
