@@ -6,9 +6,9 @@ using CsvHelper.Configuration;
 
 namespace Api.Services;
 
-public class RegisterService
+public class FileReaderService : IFileReaderService
 {
-    public async Task<List<User>> Registrate(IFormFile file)
+    public async Task<List<User>> ReadUsers(IFormFile file)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var encodingByCodePage = Encoding.GetEncoding(1251);

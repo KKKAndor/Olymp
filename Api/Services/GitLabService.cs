@@ -3,8 +3,6 @@ using System.Text;
 using Api.Models;
 using Api.Options;
 using GitLabApiClient;
-using GitLabApiClient.Models;
-using GitLabApiClient.Models.Groups.Requests;
 using GitLabApiClient.Models.Users.Requests;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
@@ -12,7 +10,7 @@ using MimeKit;
 
 namespace Api.Services;
 
-public class GitLabService
+public class GitLabService : IGitLabService
 {
     private readonly GitLabOptions _gitLabOptions;
     private readonly MailOptions _mailOptions;
@@ -62,9 +60,9 @@ public class GitLabService
                 var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
 
                 // TODO А надо ли?
-                var addGroupMemberRequest = new AddGroupMemberRequest(AccessLevel.Developer, createdUser.Id);
-
-                await gitLabClient.Groups.AddMemberAsync(_gitLabOptions.GroupId, addGroupMemberRequest);
+                // var addGroupMemberRequest = new AddGroupMemberRequest(AccessLevel.Developer, createdUser.Id);
+                //
+                // await gitLabClient.Groups.AddMemberAsync(_gitLabOptions.GroupId, addGroupMemberRequest);
             }
             catch (Exception ex)
             {
