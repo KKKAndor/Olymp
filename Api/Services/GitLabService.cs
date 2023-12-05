@@ -28,10 +28,6 @@ public class GitLabService : IGitLabService
     public async Task<List<User>> RegisterUsers(List<User> users)
     {
         var gitLabClient = new GitLabClient(_gitLabOptions.Url, _gitLabOptions.Token);
-        using var smtpClient = new SmtpClient();
-        await smtpClient.ConnectAsync(_mailOptions.SmtpType, _mailOptions.SmtpPort, false);
-        await smtpClient.AuthenticateAsync(_mailOptions.Address, _mailOptions.Password);
-
         var failedUsers = new List<User>();
 
         foreach (var user in users)
@@ -63,9 +59,7 @@ public class GitLabService : IGitLabService
 
                 await gitLabClient.Groups.AddMemberAsync(user.Group, addGroupMemberRequest);
 
-                using var emailMessage = PrepareMail(user.Email, login, user.Name, password);
-
-                await smtpClient.SendAsync(emailMessage);
+                await SendMail(user.Email, login, user.Name, password);
             }
             catch (Exception)
             {
@@ -73,12 +67,10 @@ public class GitLabService : IGitLabService
             }
         }
 
-        await smtpClient.DisconnectAsync(true);
-
         return failedUsers;
     }
 
-    private MimeMessage PrepareMail(string email, string login, string name, string password)
+    private async Task SendMail(string email, string login, string name, string password)
     {
         var emailMessage = new MimeMessage();
 
@@ -91,7 +83,12 @@ public class GitLabService : IGitLabService
             Text = $"Hello there {name}, here is your shit {login} - {password}"
         };
 
-        return emailMessage;
+        using var smtpClient = new SmtpClient();
+
+        await smtpClient.ConnectAsync(_mailOptions.SmtpType, _mailOptions.SmtpPort, false);
+        await smtpClient.AuthenticateAsync(_mailOptions.Address, _mailOptions.Password);
+        await smtpClient.SendAsync(emailMessage);
+        await smtpClient.DisconnectAsync(true);
     }
     
 
