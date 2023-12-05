@@ -4,5 +4,5 @@ namespace Api.Services;
 
 public interface IGitLabService
 {
-    Task<List<User>> RegisterUsers(List<User> users);
+    Task<List<UserFailureResponse>> RegisterUsers(List<User> users);
 }

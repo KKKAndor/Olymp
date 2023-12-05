@@ -25,45 +25,89 @@ public class GitLabService : IGitLabService
         _mailOptions = mailOptions?.Value ?? throw new ArgumentException(nameof(MailOptions));
     }
 
-    public async Task<List<User>> RegisterUsers(List<User> users)
+    public async Task<List<UserFailureResponse>> RegisterUsers(List<User> users)
     {
         var gitLabClient = new GitLabClient(_gitLabOptions.Url, _gitLabOptions.Token);
-        var failedUsers = new List<User>();
+        var failedUsers = new List<UserFailureResponse>();
 
         foreach (var user in users)
         {
             try
             {
-                var password = GenerateRandomPassword(10);
-
                 var login = user.Email.Split('@')[0];
 
                 var existedUser = await gitLabClient.Users.GetAsync(login);
 
                 if (existedUser != null)
                 {
-                    failedUsers.Add(user);
+                    failedUsers.Add(
+                        new UserFailureResponse(
+                            user.Email, 
+                            "Finding in gitlab",
+                            "Already existed at gitlab"));
                     continue;
                 }
 
-                var nameToRegister = TransliterateToLatin(user.Name);
+                var password = GenerateRandomPassword(10);
 
-                var createUserRequest = new CreateUserRequest(nameToRegister, login, user.Email)
+                // Creating user
+                int userId;
+                try
                 {
-                    Password = password
-                };
+                    var nameToRegister = TransliterateToLatin(user.Name);
+                    var createUserRequest = new CreateUserRequest(nameToRegister, login, user.Email)
+                    {
+                        Password = password
+                    };
+                    var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
+                    userId = createdUser.Id;
+                }
+                catch (Exception exception)
+                {
+                    failedUsers.Add(
+                        new UserFailureResponse(
+                            user.Email, 
+                            "Creating user",
+                            exception.Message));
+                    continue;
+                }
 
-                var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
+                // Adding user to group
+                try
+                {
+                    var addGroupMemberRequest = new AddGroupMemberRequest(AccessLevel.Reporter, userId);
+                    await gitLabClient.Groups.AddMemberAsync(user.Group, addGroupMemberRequest);
+                }
+                catch (Exception exception)
+                {
+                    failedUsers.Add(
+                        new UserFailureResponse(
+                            user.Email, 
+                            "Adding user to group",
+                            exception.Message));
+                    continue;
+                }
 
-                var addGroupMemberRequest = new AddGroupMemberRequest(AccessLevel.Reporter, createdUser.Id);
-
-                await gitLabClient.Groups.AddMemberAsync(user.Group, addGroupMemberRequest);
-
-                await SendMail(user.Email, login, user.Name, password);
+                // Senging email to user
+                try
+                {
+                    await SendMail(user.Email, login, user.Name, password);
+                }
+                catch (Exception exception)
+                {
+                    failedUsers.Add(
+                        new UserFailureResponse(
+                            user.Email, 
+                            "Sending email",
+                            exception.Message));
+                }
             }
             catch (Exception)
             {
-                failedUsers.Add(user);
+                failedUsers.Add(new UserFailureResponse(
+                    user.Email, 
+                    "Unexpected shit",
+                    "Unexpected shit"));
             }
         }
 
@@ -72,7 +116,7 @@ public class GitLabService : IGitLabService
 
     private async Task SendMail(string email, string login, string name, string password)
     {
-        var emailMessage = new MimeMessage();
+        using var emailMessage = new MimeMessage();
 
         emailMessage.From.Add(new MailboxAddress("Dex", _mailOptions.Address));
         emailMessage.To.Add(new MailboxAddress(name, email));

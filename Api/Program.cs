@@ -1,8 +1,5 @@
 using Api.Options;
-using Api;
 using Api.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
