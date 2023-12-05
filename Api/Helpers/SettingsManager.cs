@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace AIDungeonMaster;
+namespace Api.Helpers;
 
 public class SettingsManager
 {

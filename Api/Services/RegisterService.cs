@@ -1,9 +1,4 @@
-﻿using GitLabApiClient;
-using GitLabApiClient.Models;
-using GitLabApiClient.Models.Groups.Requests;
-using GitLabApiClient.Models.Users.Requests;
-
-namespace Api;
+﻿namespace Api.Services;
 
 public class RegisterService
 {
