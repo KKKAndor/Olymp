@@ -5,7 +5,7 @@ using Api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<GitLabOptions>(builder.Configuration.GetSection(nameof(GitLabOptions)));
-
+builder.Services.AddTransient<RegisterService>();
 
 
 builder.Services.AddControllers();
