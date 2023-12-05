@@ -1,6 +1,10 @@
+using Api.Options;
 using Api;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<GitLabOptions>(builder.Configuration.GetSection(nameof(GitLabOptions)));
+
 
 
 builder.Services.AddControllers();
