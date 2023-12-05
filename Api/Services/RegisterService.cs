@@ -22,11 +22,9 @@ public class RegisterService
 
         var records = new List<User>();
 
-        using (var reader = new StreamReader(file.OpenReadStream(), encodingByCodePage))
-        using (var csv = new CsvReader(reader, configuration))
-        {
-            records = csv.GetRecords<User>().ToList();
-            return records;
-        }
+        using var reader = new StreamReader(file.OpenReadStream(), encodingByCodePage);
+        using var csv = new CsvReader(reader, configuration);
+        records = csv.GetRecords<User>().ToList();
+        return records;
     }
 }
