@@ -7,6 +7,7 @@ builder.Services.Configure<MailOptions>(builder.Configuration.GetSection(nameof(
 builder.Services.Configure<GitLabOptions>(builder.Configuration.GetSection(nameof(GitLabOptions)));
 builder.Services.AddTransient<IFileReaderService, FileReaderService>();
 builder.Services.AddTransient<IGitLabService, GitLabService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 builder.Services.AddSwaggerGen();
 

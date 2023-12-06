@@ -12,4 +12,16 @@
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Services\EmailSender.cs">
+        <DependentUpon>IEmailSender.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\FileReaderService.cs">
+        <DependentUpon>IFileReaderService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\GitLabService.cs">
+        <DependentUpon>IGitLabService.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>
