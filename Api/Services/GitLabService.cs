@@ -83,19 +83,20 @@ public class GitLabService : IGitLabService
                     continue;
                 }
 
+                // TODO А когда то надо было
                 // Senging email to user
-                try
-                {
-                    await _emailSender.SendMail(user.Email, login, user.Name, password);
-                }
-                catch (Exception exception)
-                {
-                    failedUsers.Add(
-                        new UserFailureResponse(
-                            user.Email,
-                            "Sending email",
-                            exception.Message));
-                }
+                // try
+                // {
+                //     await _emailSender.SendMail(user.Email, login, user.Name, password);
+                // }
+                // catch (Exception exception)
+                // {
+                //     failedUsers.Add(
+                //         new UserFailureResponse(
+                //             user.Email,
+                //             "Sending email",
+                //             exception.Message));
+                // }
             }
             catch (Exception)
             {
