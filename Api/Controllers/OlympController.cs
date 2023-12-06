@@ -1,4 +1,5 @@
-﻿using Api.Services;
+﻿using Api.Models;
+using Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -16,13 +17,25 @@ public class OlympController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> ReadAndRegister(IFormFile file)
+    public async Task<IActionResult> ReadFileAndRegister(IFormFile file)
     {
         var users = await _fileReaderService.ReadUsers(file);
-        var failedUsers = await _gitLabService.RegisterUsers(users);
-        if (failedUsers.Any())
+        var failedUsersResponses = await _gitLabService.RegisterUsers(users);
+        if (failedUsersResponses.Any())
         {
-            return Conflict();
+            return BadRequest(failedUsersResponses);
+        }
+
+        return Ok();
+    }
+
+    [HttpPatch]
+    public async Task<IActionResult> UpdatePasswordAndResend([FromBody] ResendModel model)
+    {
+        var failedUserResponse = await _gitLabService.UpdateUserPasswordAndResend(model);
+        if (failedUserResponse != null)
+        {
+            return BadRequest(failedUserResponse);
         }
 
         return Ok();

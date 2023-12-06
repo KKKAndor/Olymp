@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using Api.Models;
+﻿using Api.Models;
 using Api.Options;
 using GitLabApiClient;
 using GitLabApiClient.Models;
@@ -38,7 +36,7 @@ public class GitLabService : IGitLabService
                 {
                     failedUsers.Add(
                         new UserFailureResponse(
-                            user.Email, 
+                            user.Email,
                             "Finding in gitlab",
                             "Already existed at gitlab"));
                     continue;
@@ -62,12 +60,12 @@ public class GitLabService : IGitLabService
                 {
                     failedUsers.Add(
                         new UserFailureResponse(
-                            user.Email, 
+                            user.Email,
                             "Creating user",
                             exception.Message));
                     continue;
                 }
-                
+
                 // Adding user to group
                 try
                 {
@@ -78,7 +76,7 @@ public class GitLabService : IGitLabService
                 {
                     failedUsers.Add(
                         new UserFailureResponse(
-                            user.Email, 
+                            user.Email,
                             "Adding user to group",
                             exception.Message));
                     continue;
@@ -93,7 +91,7 @@ public class GitLabService : IGitLabService
                 {
                     failedUsers.Add(
                         new UserFailureResponse(
-                            user.Email, 
+                            user.Email,
                             "Sending email",
                             exception.Message));
                 }
@@ -101,12 +99,64 @@ public class GitLabService : IGitLabService
             catch (Exception)
             {
                 failedUsers.Add(new UserFailureResponse(
-                    user.Email, 
+                    user.Email,
                     "Unexpected shit",
                     "Unexpected shit"));
             }
         }
 
         return failedUsers;
+    }
+
+    public async Task<UserFailureResponse> UpdateUserPasswordAndResend(ResendModel model)
+    {
+        var gitLabClient = new GitLabClient(_gitLabOptions.Url, _gitLabOptions.Token);
+        var email = model.Email;
+
+        var login = email.Split('@')[0];
+
+        var existedUser = await gitLabClient.Users.GetAsync(login);
+
+        if (existedUser == null)
+        {
+            return new UserFailureResponse(
+                email,
+                "Finding in gitlab",
+                "Not existed at gitlab");
+        }
+
+        var password = Helper.GenerateRandomPassword(10);
+
+        // Updating user
+        try
+        {
+            var createUserRequest = new UpdateUserRequest
+            {
+                Password = password
+            };
+            await gitLabClient.Users.UpdateAsync(existedUser.Id, createUserRequest);
+        }
+        catch (Exception exception)
+        {
+            return new UserFailureResponse(
+                email,
+                "Updating user",
+                exception.Message);
+        }
+
+        // ReSenging email to user
+        try
+        {
+            await _emailSender.SendMail(email, login, model.Name, password);
+        }
+        catch (Exception exception)
+        {
+            return new UserFailureResponse(
+                email,
+                "Sending email",
+                exception.Message);
+        }
+
+        return null;
     }
 }
