@@ -51,7 +51,8 @@ public class GitLabService : IGitLabService
                     var nameToRegister = Helper.TransliterateToLatin(user.Name);
                     var createUserRequest = new CreateUserRequest(nameToRegister, login, user.Email)
                     {
-                        Password = password
+                        // Password = password,
+                        ResetPassword = true
                     };
                     var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
                     userId = createdUser.Id;

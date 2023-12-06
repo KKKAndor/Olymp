@@ -18,18 +18,19 @@ public class EmailSender : IEmailSender
     {
         using var emailMessage = new MimeMessage();
 
-        emailMessage.From.Add(new MailboxAddress("Dex", _mailOptions.Address));
+        emailMessage.From.Add(new MailboxAddress("Test", _mailOptions.Address));
         emailMessage.To.Add(new MailboxAddress(name, email));
-        emailMessage.Subject = "Ivitation";
+        emailMessage.Subject = "Test";
         emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)
         {
+            Text = "Test"
             // TODO Здесь по идее какая-то html'а 
-            Text = $"Hello there {name}, here is your shit {login} - {password}"
+            //Text = $"Hello there {name}, here is your shit {login} - {password}"
         };
 
         using var smtpClient = new SmtpClient();
 
-        await smtpClient.ConnectAsync(_mailOptions.SmtpType, _mailOptions.SmtpPort, false);
+        await smtpClient.ConnectAsync(_mailOptions.SmtpType, _mailOptions.SmtpPort, true);
         await smtpClient.AuthenticateAsync(_mailOptions.Address, _mailOptions.Password);
         await smtpClient.SendAsync(emailMessage);
         await smtpClient.DisconnectAsync(true);
