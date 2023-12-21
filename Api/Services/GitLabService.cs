@@ -11,12 +11,12 @@ namespace Api.Services;
 public class GitLabService : IGitLabService
 {
     private readonly GitLabOptions _gitLabOptions;
-    private readonly IEmailSender _emailSender;
+    // private readonly IEmailSender _emailSender;
 
-    public GitLabService(IOptions<GitLabOptions> gitLabOptions, IEmailSender emailSender)
+    public GitLabService(IOptions<GitLabOptions> gitLabOptions/*, IEmailSender emailSender*/)
     {
         _gitLabOptions = gitLabOptions?.Value ?? throw new ArgumentException(nameof(GitLabOptions));
-        _emailSender = emailSender ?? throw new ArgumentException(nameof(MailOptions));
+        // _emailSender = emailSender ?? throw new ArgumentException(nameof(MailOptions));
     }
 
     public async Task<List<UserFailureResponse>> RegisterUsers(List<User> users)
@@ -42,23 +42,30 @@ public class GitLabService : IGitLabService
                     continue;
                 }
 
-                var password = Helper.GenerateRandomPassword(10);
+                //var password = Helper.GenerateRandomPassword(10);
 
                 // Creating user
                 int userId;
                 try
                 {
-                    var nameToRegister = Helper.TransliterateToLatin(user.Name);
-                    var createUserRequest = new CreateUserRequest(nameToRegister, login, user.Email)
+                    //var nameToRegister = Helper.TransliterateToLatin(user.Name);
+                    var createUserRequest = new CreateUserRequest(user.Name, login, user.Email)
                     {
                         // Password = password,
                         ResetPassword = true
                     };
                     var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
                     userId = createdUser.Id;
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"User {user.Name} with email {user.Email} and login {login} created with Id {userId}");
+                    Console.ForegroundColor = default;
                 }
                 catch (Exception exception)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"ERROR: User {user.Name} with email {user.Email} and login {login} was not created. Message: " 
+                                      + exception.Message);
+                    Console.ForegroundColor = default;
                     failedUsers.Add(
                         new UserFailureResponse(
                             user.Email,
@@ -70,11 +77,19 @@ public class GitLabService : IGitLabService
                 // Adding user to group
                 try
                 {
-                    var addGroupMemberRequest = new AddGroupMemberRequest(AccessLevel.Reporter, userId);
+                    var accessLevel = AccessLevel.Reporter;
+                    var addGroupMemberRequest = new AddGroupMemberRequest(accessLevel, userId);
                     await gitLabClient.Groups.AddMemberAsync(user.Group, addGroupMemberRequest);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"User {user.Name} with email {user.Email} and login {login} added to group {user.Group} as {accessLevel}");
+                    Console.ForegroundColor = default;
                 }
                 catch (Exception exception)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"ERROR: User {user.Name} with email {user.Email} and login {login} was not added to group {user.Group}. Message: " 
+                        + exception.Message);
+                    Console.ForegroundColor = default;
                     failedUsers.Add(
                         new UserFailureResponse(
                             user.Email,
@@ -146,18 +161,18 @@ public class GitLabService : IGitLabService
                 exception.Message);
         }
 
-        // ReSenging email to user
-        try
-        {
-            await _emailSender.SendMail(email, login, model.Name, password);
-        }
-        catch (Exception exception)
-        {
-            return new UserFailureResponse(
-                email,
-                "Sending email",
-                exception.Message);
-        }
+        // // ReSenging email to user
+        // try
+        // {
+        //     await _emailSender.SendMail(email, login, model.Name, password);
+        // }
+        // catch (Exception exception)
+        // {
+        //     return new UserFailureResponse(
+        //         email,
+        //         "Sending email",
+        //         exception.Message);
+        // }
 
         return null;
     }
