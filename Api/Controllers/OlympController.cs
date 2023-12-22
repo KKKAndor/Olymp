@@ -37,14 +37,10 @@ public class OlympController : Controller
     }
 
     [HttpPatch]
-    public async Task<IActionResult> UpdatePasswordAndResend([FromBody] ResendModel model)
+    public async Task<string> UpdatePasswordAndResend([FromBody] ResendModel model)
     {
-        var failedUserResponse = await _gitLabService.UpdateUserPasswordAndResend(model);
-        if (failedUserResponse != null)
-        {
-            return BadRequest(failedUserResponse);
-        }
+        var password = await _gitLabService.UpdateUserPasswordAndResend(model);
 
-        return Ok();
+        return password;
     }
 }

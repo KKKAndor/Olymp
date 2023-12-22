@@ -6,6 +6,7 @@ using GitLabApiClient.Models;
 using GitLabApiClient.Models.Groups.Requests;
 using GitLabApiClient.Models.Users.Requests;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Exceptions;
 
 namespace Api.Services;
 
@@ -168,7 +169,7 @@ public class GitLabService : IGitLabService
         }
     }
 
-    public async Task<UserFailureResponse> UpdateUserPasswordAndResend(ResendModel model)
+    public async Task<string> UpdateUserPasswordAndResend(ResendModel model)
     {
         var gitLabClient = new GitLabClient(_gitLabOptions.Url, _gitLabOptions.Token);
         var email = model.Email;
@@ -179,10 +180,7 @@ public class GitLabService : IGitLabService
 
         if (existedUser == null)
         {
-            return new UserFailureResponse(
-                email,
-                "Finding in gitlab",
-                "Not existed at gitlab");
+            throw new OpenApiException();
         }
 
         var password = Helper.GenerateRandomPassword(10);
@@ -198,10 +196,7 @@ public class GitLabService : IGitLabService
         }
         catch (Exception exception)
         {
-            return new UserFailureResponse(
-                email,
-                "Updating user",
-                exception.Message);
+            throw new OpenApiException();
         }
 
         // // ReSenging email to user
@@ -217,6 +212,6 @@ public class GitLabService : IGitLabService
         //         exception.Message);
         // }
 
-        return null;
+        return password;
     }
 }
