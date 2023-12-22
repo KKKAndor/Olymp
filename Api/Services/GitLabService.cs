@@ -1,6 +1,7 @@
 ﻿using Api.Models;
 using Api.Options;
 using GitLabApiClient;
+using GitLabApiClient.Internal.Paths;
 using GitLabApiClient.Models;
 using GitLabApiClient.Models.Groups.Requests;
 using GitLabApiClient.Models.Users.Requests;
@@ -31,7 +32,7 @@ public class GitLabService : IGitLabService
                 var login = user.Email.Split('@')[0];
 
                 var existedUser = await gitLabClient.Users.GetAsync(login);
-
+                await Task.Delay(3000);
                 if (existedUser != null)
                 {
                     failedUsers.Add(
@@ -55,6 +56,7 @@ public class GitLabService : IGitLabService
                         ResetPassword = true
                     };
                     var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
+                    await Task.Delay(3000);
                     userId = createdUser.Id;
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine(
@@ -84,6 +86,7 @@ public class GitLabService : IGitLabService
                     try
                     {
                         await gitLabClient.Groups.AddMemberAsync(group, addGroupMemberRequest);
+                        await Task.Delay(3000);
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine(
                             $"User {user.Name} with email {user.Email} and login {login} added to group {group} as {accessLevel}");
@@ -131,6 +134,38 @@ public class GitLabService : IGitLabService
         }
 
         return failedUsers;
+    }
+
+    public async Task DeleteUsers(List<User> users)
+    {
+        var gitLabClient = new GitLabClient(_gitLabOptions.Url, _gitLabOptions.Token);
+
+        foreach (var user in users)
+        {
+            var currentUserId = 0;
+            try
+            {
+                var login = user.Email.Split('@')[0];
+                var existedUser = await gitLabClient.Users.GetAsync(login);
+                currentUserId = existedUser.Id;
+                await Task.Delay(1000);
+                await gitLabClient.Users.DeleteAsync(currentUserId);
+                
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(
+                    $"User {currentUserId} deleted");
+                Console.ForegroundColor = default;
+            }
+            catch (Exception exception)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(
+                    $"There is error while deleting user {currentUserId}"
+                    + exception.Message);
+                Console.ForegroundColor = default;
+            }
+            await Task.Delay(4000);
+        }
     }
 
     public async Task<UserFailureResponse> UpdateUserPasswordAndResend(ResendModel model)

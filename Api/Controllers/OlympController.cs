@@ -29,6 +29,13 @@ public class OlympController : Controller
         return Ok();
     }
 
+    [HttpDelete]
+    public async Task DeleteUsers(IFormFile file)
+    {
+        var users = await _fileReaderService.ReadUsers(file);
+        await _gitLabService.DeleteUsers(users);
+    }
+
     [HttpPatch]
     public async Task<IActionResult> UpdatePasswordAndResend([FromBody] ResendModel model)
     {
