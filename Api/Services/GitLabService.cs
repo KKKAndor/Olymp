@@ -13,7 +13,7 @@ public class GitLabService : IGitLabService
     private readonly GitLabOptions _gitLabOptions;
     // private readonly IEmailSender _emailSender;
 
-    public GitLabService(IOptions<GitLabOptions> gitLabOptions/*, IEmailSender emailSender*/)
+    public GitLabService(IOptions<GitLabOptions> gitLabOptions /*, IEmailSender emailSender*/)
     {
         _gitLabOptions = gitLabOptions?.Value ?? throw new ArgumentException(nameof(GitLabOptions));
         // _emailSender = emailSender ?? throw new ArgumentException(nameof(MailOptions));
@@ -57,14 +57,16 @@ public class GitLabService : IGitLabService
                     var createdUser = await gitLabClient.Users.CreateAsync(createUserRequest);
                     userId = createdUser.Id;
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"User {user.Name} with email {user.Email} and login {login} created with Id {userId}");
+                    Console.WriteLine(
+                        $"User {user.Name} with email {user.Email} and login {login} created with Id {userId}");
                     Console.ForegroundColor = default;
                 }
                 catch (Exception exception)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"ERROR: User {user.Name} with email {user.Email} and login {login} was not created. Message: " 
-                                      + exception.Message);
+                    Console.WriteLine(
+                        $"ERROR: User {user.Name} with email {user.Email} and login {login} was not created. Message: "
+                        + exception.Message);
                     Console.ForegroundColor = default;
                     failedUsers.Add(
                         new UserFailureResponse(
@@ -75,28 +77,34 @@ public class GitLabService : IGitLabService
                 }
 
                 // Adding user to group
-                try
+                var accessLevel = AccessLevel.Reporter;
+                var addGroupMemberRequest = new AddGroupMemberRequest(accessLevel, userId);
+                foreach (var group in user.Group.Split(','))
                 {
-                    var accessLevel = AccessLevel.Reporter;
-                    var addGroupMemberRequest = new AddGroupMemberRequest(accessLevel, userId);
-                    await gitLabClient.Groups.AddMemberAsync(user.Group, addGroupMemberRequest);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"User {user.Name} with email {user.Email} and login {login} added to group {user.Group} as {accessLevel}");
-                    Console.ForegroundColor = default;
+                    try
+                    {
+                        await gitLabClient.Groups.AddMemberAsync(group, addGroupMemberRequest);
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine(
+                            $"User {user.Name} with email {user.Email} and login {login} added to group {group} as {accessLevel}");
+                        Console.ForegroundColor = default;
+                    }
+
+                    catch (Exception exception)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(
+                            $"ERROR: User {user.Name} with email {user.Email} and login {login} was not added to group {group}. Message: "
+                            + exception.Message);
+                        Console.ForegroundColor = default;
+                        failedUsers.Add(
+                            new UserFailureResponse(
+                                user.Email,
+                                "Adding user to group",
+                                exception.Message));
+                    }
                 }
-                catch (Exception exception)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"ERROR: User {user.Name} with email {user.Email} and login {login} was not added to group {user.Group}. Message: " 
-                        + exception.Message);
-                    Console.ForegroundColor = default;
-                    failedUsers.Add(
-                        new UserFailureResponse(
-                            user.Email,
-                            "Adding user to group",
-                            exception.Message));
-                    continue;
-                }
+
 
                 // TODO А когда то надо было
                 // Senging email to user

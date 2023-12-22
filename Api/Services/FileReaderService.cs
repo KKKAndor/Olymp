@@ -20,11 +20,9 @@ public class FileReaderService : IFileReaderService
             Encoding = encodingByCodePage,
         };
 
-        var records = new List<User>();
-
         using var reader = new StreamReader(file.OpenReadStream(), encodingByCodePage);
         using var csv = new CsvReader(reader, configuration);
-        records = csv.GetRecords<User>().ToList();
+        var records = csv.GetRecords<User>().ToList();
         return records;
     }
 }
